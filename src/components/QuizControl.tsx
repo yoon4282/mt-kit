@@ -198,7 +198,7 @@ export function QuizControl({ view, send }: { view: McView; send: (a: McAction) 
               <button type="button" className="btn sm" onClick={() => send({ type: 'TTS_PLAY', rate: 1.3 })}>
                 🐇 빠르게 읽기 (1.3배속)
               </button>
-              <span className="muted small">전광판 스피커로 읽어요{round.tts.seq ? ` · 현재 ${round.tts.rate}배속` : ''} · 낭독이 끝나야 버저가 열려요 (다시 들을 땐 잠시 닫힘)</span>
+              <span className="muted small">전광판 스피커로 읽어요{round.tts.seq ? ` · 현재 ${round.tts.rate}배속` : ''} · [문제 공개 + 시작] 1초 뒤 자동 낭독 · 낭독이 끝나야 버저가 열려요 (다시 들을 땐 잠시 닫힘)</span>
             </div>
           )}
 

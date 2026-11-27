@@ -76,8 +76,8 @@ export interface RoundState {
   clip: { seq: number; sec: number | null };
   /** 줌인 퀴즈 확대 단계: 1 = 400% (일부만), 2 = 200%, 3 = 100% (전체) */
   zoom: 1 | 2 | 3;
-  /** 가사 TTS 낭독 트리거: seq 가 바뀌면 전광판이 rate 배속으로 가사를 읽음 */
-  tts: { seq: number; rate: number };
+  /** 가사 TTS 낭독 트리거: seq 가 바뀌면 전광판이 delayMs 뒤 rate 배속으로 가사를 읽음 */
+  tts: { seq: number; rate: number; delayMs?: number };
   /** 가사 TTS 힌트 단계: 1 = 힌트 없음, 2 = 가수 공개, 3 = 제목 초성 */
   ttsHint: 1 | 2 | 3;
   /** 문제가 공개된 시각 (반응 속도 계산용) */

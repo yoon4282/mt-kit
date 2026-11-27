@@ -3,8 +3,8 @@ import { useEffect, useRef, useState } from 'react';
 interface Props {
   /** 읽어 줄 가사 — 화면에는 절대 표시하지 않고 음성으로만 재생 */
   lyrics: string | undefined;
-  /** seq 가 바뀔 때마다 rate 배속으로 낭독 */
-  tts: { seq: number; rate: number };
+  /** seq 가 바뀔 때마다 delayMs 뒤 rate 배속으로 낭독 */
+  tts: { seq: number; rate: number; delayMs?: number };
   /** 정답 공개 후에는 낭독을 멈추고 조용히 */
   revealed: boolean;
   /** seq 번째 낭독이 끝남 (오류로 못 읽은 경우 포함) → 버저 열기 */
@@ -22,6 +22,7 @@ export function TtsSpeaker({ lyrics, tts, revealed, onEnd }: Props) {
   const lastSeq = useRef(tts.seq);
   const lyricsRef = useRef(lyrics);
   lyricsRef.current = lyrics;
+  const timerRef = useRef<number | undefined>(undefined);
   const onEndRef = useRef(onEnd);
   onEndRef.current = onEnd;
   const [speaking, setSpeaking] = useState(false);
@@ -31,6 +32,7 @@ export function TtsSpeaker({ lyrics, tts, revealed, onEnd }: Props) {
   const supported = typeof window !== 'undefined' && 'speechSynthesis' in window;
 
   const stop = () => {
+    window.clearTimeout(timerRef.current);
     if (supported) window.speechSynthesis.cancel();
     setSpeaking(false);
   };
@@ -58,6 +60,7 @@ export function TtsSpeaker({ lyrics, tts, revealed, onEnd }: Props) {
       return done();
     }
     setError(null);
+    window.clearTimeout(timerRef.current);
     window.speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
     u.lang = 'ko-KR';
@@ -79,9 +82,10 @@ export function TtsSpeaker({ lyrics, tts, revealed, onEnd }: Props) {
         done();
       }
     };
-    // cancel() 직후 바로 speak() 하면 크롬에서 씹히는 경우가 있어 한 틱 뒤에 실행
-    window.setTimeout(() => window.speechSynthesis.speak(u), 60);
-  }, [tts.seq, tts.rate, supported]);
+    // cancel() 직후 바로 speak() 하면 크롬에서 씹히는 경우가 있어 최소 한 틱 뒤에 실행
+    // (문제 공개 직후 자동 낭독은 delayMs 만큼 기다렸다가 읽음)
+    timerRef.current = window.setTimeout(() => window.speechSynthesis.speak(u), Math.max(60, tts.delayMs ?? 0));
+  }, [tts.seq, tts.rate, tts.delayMs, supported]);
 
   // 문제가 바뀌거나 정답이 공개되면 중단
   useEffect(() => {
