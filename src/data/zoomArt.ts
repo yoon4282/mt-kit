@@ -6,7 +6,7 @@ import type { ZoomArt } from './quiz';
  * 브랜드 로고는 도형만으로 단순화한 학습·퀴즈용 그림입니다.
  */
 
-const svg = (inner: string, bg: string) =>
+export const svg = (inner: string, bg: string) =>
   `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" role="img"><rect width="100" height="100" fill="${bg}"/>${inner}</svg>`;
 
 // ── 태극기 ──
