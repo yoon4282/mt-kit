@@ -61,7 +61,7 @@ export function Stage({ view, art }: { view: PublicView; art?: ZoomArt }) {
           {q.isZoom && art && (
             <ZoomFrame art={art} level={round.phase === 'revealed' ? 3 : round.zoom} />
           )}
-          {q.isTts && round.hints.length > 0 && (
+          {(q.isTts || q.isMusic) && round.hints.length > 0 && (
             <div className="tts-hints">
               {round.hints.map((h) => (
                 <div key={h} className="tts-hint">{h}</div>

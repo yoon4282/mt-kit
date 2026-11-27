@@ -147,6 +147,8 @@ function applyScore(state: GameState, ev: ScoreEvent, sign: 1 | -1): GameState {
 
 /** 4지선다 스피드 채점: 가장 빠른 정답자 30점, 그 뒤로 1점씩 감소 (최소 1점) */
 export const SPEED_MAX_POINTS = 30;
+/** 단계별 힌트(가수 → 제목 초성)를 쓰는 퀴즈: 가사 낭독·1초 음악 */
+const HINT_KINDS = new Set<string | null>(['tts', 'music']);
 /** 가사 낭독: [문제 공개 + 시작] 후 자동 낭독까지 대기 시간 */
 export const TTS_AUTO_DELAY_MS = 1000;
 
@@ -214,7 +216,7 @@ function loadQuestion(state: GameState, questionId: string, pushHistory: boolean
       startedAt: null,
       zoom: 1, // 줌인: 항상 400% 부터
       tts: { seq: state.round.tts?.seq ?? 0, rate: 1 },
-      ttsHint: 1, // 가사 낭독: 항상 힌트 없이 시작
+      ttsHint: 1, // 가사 낭독·음악: 항상 힌트 없이 시작
     },
     buzzer: { ...state.buzzer, open: false, order: [], out: [] },
     timer: makeTimer(ref.type.defaultSec),
@@ -562,13 +564,13 @@ function reduce(state: GameState, action: GameAction): GameState {
     }
 
     case 'TTS_HINT_SET': {
-      if (state.round.kind !== 'tts' || !state.round.questionId) return state;
+      if (!HINT_KINDS.has(state.round.kind) || !state.round.questionId) return state;
       const level = action.level === 2 || action.level === 3 ? action.level : 1;
       return { ...state, round: { ...state.round, ttsHint: level } };
     }
 
     case 'TTS_HINT_MORE': {
-      if (state.round.kind !== 'tts' || !state.round.questionId) return state;
+      if (!HINT_KINDS.has(state.round.kind) || !state.round.questionId) return state;
       const cur = state.round.ttsHint ?? 1;
       return cur >= 3 ? state : { ...state, round: { ...state.round, ttsHint: (cur + 1) as 2 | 3 } };
     }

@@ -186,6 +186,14 @@ export function PlayerRemote({ room, bot = false }: { room: string; bot?: boolea
           ) : (
             <>
               {q.prompt && !q.isMusic && q.input !== 'buzzer' && <div className="p-prompt">{q.prompt}</div>}
+              {/* 가사 낭독·음악: MC 가 공개한 단계별 힌트 */}
+              {view.round.hints.length > 0 && (
+                <div className="p-hints">
+                  {view.round.hints.map((h) => (
+                    <div key={h} className="p-hint">{h}</div>
+                  ))}
+                </div>
+              )}
 
               {q.input === 'buzzer' && (
                 <Buzzer

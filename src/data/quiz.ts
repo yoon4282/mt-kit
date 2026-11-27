@@ -192,15 +192,11 @@ export const lyricQ = (title: string, artist: string, lyrics: string, accept?: s
   explanation: `${artist} - ${title}`,
 });
 
-/** 가사 TTS 퀴즈 확대 힌트 단계: 1 = 힌트 없음, 2 = 가수 공개, 3 = 제목 초성(영어 제목은 글자 수) */
+/** 가사 낭독·음악 퀴즈 힌트 단계: 1 = 힌트 없음, 2 = 가수 공개, 3 = 제목 초성(영어 제목은 글자 수) */
 export const TTS_HINT_SCORES = [30, 20, 10] as const;
 
 /** 단계별 전광판 힌트 문구 [2단계, 3단계] */
 export function ttsHints(q: { answer: string; artist?: string; year?: number }): [string, string] {
   const singer = `🎤 가수: ${q.artist ?? '?'}${q.year ? ` · ${q.year}년 발매` : ''}`;
-  const t = q.answer;
-  const title = /[A-Za-z]/.test(t)
-    ? `🔤 제목: ${t.replace(/\s/g, '').length}글자${/[가-힣]/.test(t) ? ' (영어 포함)' : ' (영어 제목)'}`
-    : `🔤 제목 초성: ${toChosung(t)}`;
-  return [singer, title];
+  return [singer, `🔤 ${titleHint(q.answer)}`];
 }

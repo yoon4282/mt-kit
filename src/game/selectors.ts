@@ -36,7 +36,7 @@ function roundView(state: GameState): RoundView {
     ttsHint: round.ttsHint ?? 1,
     // 문제 공개 전(ready)에는 힌트도 비공개. 정답 공개 후에는 전부 보여 줌
     hints:
-      q && q.input === 'buzzer' && q.lyrics && round.phase !== 'ready'
+      q && q.input === 'buzzer' && (q.lyrics || q.media) && round.phase !== 'ready'
         ? ttsHints(q).slice(0, round.phase === 'revealed' ? 2 : (round.ttsHint ?? 1) - 1)
         : [],
     question: q
