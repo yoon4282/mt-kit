@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { McAction } from '../game/reducer';
 import { correctPlayerIds, describeAward } from '../game/selectors';
+import { TTS_HINT_SCORES } from '../data/quiz';
 import type { McView, Mode } from '../types';
 import { TeamChip, teamStyle } from './TeamChip';
 
@@ -44,8 +45,11 @@ export function ControlPanel({ view, send, compact }: Props) {
   const setMode = (mode: Mode) => send({ type: 'SET_MODE', mode });
 
   // 줌인 퀴즈: 확대 단계별 권장 배점 (400% +30 → 200% +20 → 100% +10) 을 프리셋에서 강조
-  const zoomLive = view.round.kind === 'zoom' && !!view.round.question && view.round.phase !== 'ready' && view.round.phase !== 'revealed';
-  const suggest = zoomLive ? ([30, 20, 10] as const)[view.round.zoom - 1] : null;
+  // 가사 낭독 퀴즈도 같은 방식: 힌트 없음 +30 → 가수 공개 +20 → 제목 초성 +10
+  const stepLive = !!view.round.question && view.round.phase !== 'ready' && view.round.phase !== 'revealed';
+  const zoomLive = stepLive && view.round.kind === 'zoom';
+  const ttsLive = stepLive && view.round.kind === 'tts';
+  const suggest = zoomLive ? ([30, 20, 10] as const)[view.round.zoom - 1] : ttsLive ? TTS_HINT_SCORES[view.round.ttsHint - 1] : null;
 
   const buzzOrder = view.buzzer.order;
   const firstBuzzer = buzzOrder[0];
@@ -217,7 +221,8 @@ export function ControlPanel({ view, send, compact }: Props) {
             부여
           </button>
         </form>
-        {suggest !== null && <p className="hint">🔍 줌인 {view.round.zoom}단계({ZOOM_PCT[view.round.zoom]}%) 권장 배점: <b>+{suggest}점</b></p>}
+        {suggest !== null && zoomLive && <p className="hint">🔍 줌인 {view.round.zoom}단계({ZOOM_PCT[view.round.zoom]}%) 권장 배점: <b>+{suggest}점</b></p>}
+        {suggest !== null && ttsLive && <p className="hint">💡 가사 낭독 힌트 {view.round.ttsHint}단계 권장 배점: <b>+{suggest}점</b></p>}
         {!selected.length && <p className="hint">위에서 {view.mode === 'individual' ? '참가자' : '팀'}를 먼저 선택하세요 (여러 명 동시 선택 가능)</p>}
         <div className="row undo-row">
           <button type="button" className="btn ghost" disabled={!view.canUndo} onClick={() => send({ type: 'UNDO' })}>

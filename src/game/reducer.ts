@@ -38,6 +38,9 @@ export type McAction =
   | { type: 'ZOOM_WIDEN' }
   // 가사 TTS 낭독: rate 생략 시 직전 속도로 다시 읽기
   | { type: 'TTS_PLAY'; rate?: number }
+  // 가사 TTS 힌트 단계 (줌인처럼 단계가 올라갈수록 권장 배점이 내려감)
+  | { type: 'TTS_HINT_SET'; level: 1 | 2 | 3 }
+  | { type: 'TTS_HINT_MORE' }
   // 타이머
   | { type: 'TIMER_SET'; sec: number }
   | { type: 'TIMER_RESUME' }
@@ -54,6 +57,8 @@ export type SystemAction =
   | { type: 'TIMER_EXPIRE' }
   /** 전광판 음악 플레이어: seq 번째 재생이 끝남 */
   | { type: 'CLIP_ENDED'; seq: number }
+  /** 전광판 가사 낭독기: seq 번째 낭독이 끝남 (또는 낭독 오류) */
+  | { type: 'TTS_ENDED'; seq: number }
   | { type: 'LOAD'; state: GameState };
 
 export type GameAction = McAction | SystemAction;
@@ -62,7 +67,7 @@ const MC_ACTION_TYPES = new Set<McAction['type']>([
   'SET_MODE', 'AWARD', 'UNDO', 'RENAME_TEAM', 'RESET_SCORES', 'REMOVE_PLAYER', 'SHOW_PODIUM',
   'BUZZER_OPEN', 'BUZZER_LOCK', 'BUZZER_RESET', 'BUZZ_WRONG',
   'PICK_CATEGORY', 'LOAD_QUESTION', 'NEXT_QUESTION', 'RANDOM_QUESTION', 'PREV_QUESTION', 'START', 'CLOSE', 'REVEAL', 'END_ROUND',
-  'SET_SHUFFLE', 'PLAY_CLIP', 'ZOOM_SET', 'ZOOM_WIDEN', 'TTS_PLAY', 'TIMER_SET', 'TIMER_RESUME', 'TIMER_PAUSE', 'TIMER_RESET',
+  'SET_SHUFFLE', 'PLAY_CLIP', 'ZOOM_SET', 'ZOOM_WIDEN', 'TTS_PLAY', 'TTS_HINT_SET', 'TTS_HINT_MORE', 'TIMER_SET', 'TIMER_RESUME', 'TIMER_PAUSE', 'TIMER_RESET',
 ]);
 
 /** 네트워크로 받은 MC 명령 검증 (참가자용 액션이 섞여 들어오지 않도록) */
@@ -91,7 +96,7 @@ export function createInitialState(): GameState {
     round: {
       kind: null, categoryId: null, questionId: null, phase: 'ready',
       asked: [], used: [], shuffle: false, answers: {}, clip: { seq: 0, sec: null },
-      zoom: 1, tts: { seq: 0, rate: 1 },
+      zoom: 1, tts: { seq: 0, rate: 1 }, ttsHint: 1,
       startedAt: null, scored: [],
     },
     timer: makeTimer(DEFAULT_SEC),
@@ -207,6 +212,7 @@ function loadQuestion(state: GameState, questionId: string, pushHistory: boolean
       startedAt: null,
       zoom: 1, // 줌인: 항상 400% 부터
       tts: { seq: state.round.tts?.seq ?? 0, rate: 1 },
+      ttsHint: 1, // 가사 낭독: 항상 힌트 없이 시작
     },
     buzzer: { ...state.buzzer, open: false, order: [], out: [] },
     timer: makeTimer(ref.type.defaultSec),
@@ -452,7 +458,7 @@ function reduce(state: GameState, action: GameAction): GameState {
       if (!ref || state.round.phase === 'revealed') return state;
       const isBuzzer = ref.question.input === 'buzzer';
       const isMusic = !!(ref.question.input === 'buzzer' && ref.question.media);
-      // 가사 낭독 문제는 MC 가 [가사 낭독 재생]을 누를 때 버저가 열림 (TTS_PLAY)
+      // 가사 낭독 문제는 MC 가 [가사 낭독 재생]을 누르고 낭독이 끝나면 버저가 열림 (TTS_ENDED)
       const isTts = !!(ref.question.input === 'buzzer' && ref.question.lyrics);
       const fresh = state.round.phase === 'ready';
       return {
@@ -540,9 +546,27 @@ function reduce(state: GameState, action: GameAction): GameState {
       return {
         ...base,
         round: { ...base.round, tts: { seq: (base.round.tts?.seq ?? 0) + 1, rate } },
-        // 낭독과 동시에 버저 열림 (이미 누른 순서는 유지)
-        buzzer: { ...base.buzzer, open: true },
+        // 1초 음악처럼 낭독이 끝날 때까지 버저를 닫아 둠 (이미 누른 순서는 유지) → TTS_ENDED 에서 열림
+        buzzer: { ...base.buzzer, open: false },
       };
+    }
+
+    case 'TTS_ENDED': {
+      if (action.seq !== state.round.tts?.seq || state.round.phase !== 'live' || state.round.kind !== 'tts') return state;
+      if (state.buzzer.open) return state;
+      return { ...state, buzzer: { ...state.buzzer, open: true } };
+    }
+
+    case 'TTS_HINT_SET': {
+      if (state.round.kind !== 'tts' || !state.round.questionId) return state;
+      const level = action.level === 2 || action.level === 3 ? action.level : 1;
+      return { ...state, round: { ...state.round, ttsHint: level } };
+    }
+
+    case 'TTS_HINT_MORE': {
+      if (state.round.kind !== 'tts' || !state.round.questionId) return state;
+      const cur = state.round.ttsHint ?? 1;
+      return cur >= 3 ? state : { ...state, round: { ...state.round, ttsHint: (cur + 1) as 2 | 3 } };
     }
 
     case 'CLIP_ENDED': {

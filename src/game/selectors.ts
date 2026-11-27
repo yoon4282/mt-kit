@@ -1,4 +1,4 @@
-import { answerText } from '../data/quiz';
+import { answerText, ttsHints } from '../data/quiz';
 import { findCategory, findQuestion, findType } from '../data/quizzes';
 import type { GameState, McView, Player, PublicView, RoundView, Team } from '../types';
 import { computeSpeedResult, remainingMs } from './reducer';
@@ -33,6 +33,12 @@ function roundView(state: GameState): RoundView {
     phase: round.phase,
     zoom: round.zoom ?? 1,
     tts: round.tts ?? { seq: 0, rate: 1 },
+    ttsHint: round.ttsHint ?? 1,
+    // 문제 공개 전(ready)에는 힌트도 비공개. 정답 공개 후에는 전부 보여 줌
+    hints:
+      q && q.input === 'buzzer' && q.lyrics && round.phase !== 'ready'
+        ? ttsHints(q).slice(0, round.phase === 'revealed' ? 2 : (round.ttsHint ?? 1) - 1)
+        : [],
     question: q
       ? {
           id: q.id,

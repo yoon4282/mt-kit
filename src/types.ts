@@ -78,6 +78,8 @@ export interface RoundState {
   zoom: 1 | 2 | 3;
   /** 가사 TTS 낭독 트리거: seq 가 바뀌면 전광판이 rate 배속으로 가사를 읽음 */
   tts: { seq: number; rate: number };
+  /** 가사 TTS 힌트 단계: 1 = 힌트 없음, 2 = 가수 공개, 3 = 제목 초성 */
+  ttsHint: 1 | 2 | 3;
   /** 문제가 공개된 시각 (반응 속도 계산용) */
   startedAt: number | null;
   /** 자동 채점을 이미 한 문제 ID (중복 채점 방지) */
@@ -154,6 +156,10 @@ export interface RoundView {
   zoom: 1 | 2 | 3;
   /** 가사 낭독 횟수(seq)와 마지막 배속 — MC 화면 표시용 (가사 자체는 포함하지 않음) */
   tts: { seq: number; rate: number };
+  /** 가사 TTS 힌트 단계 (1~3) */
+  ttsHint: 1 | 2 | 3;
+  /** 지금까지 공개된 가사 TTS 힌트 문구 (전광판·폰 표시용) */
+  hints: string[];
   question: PublicQuestion | null;
   /** 제출한 사람 목록 (값은 정답 공개 전까지 비공개) */
   answeredIds: string[];

@@ -287,6 +287,7 @@ export function Board() {
               lyrics={current?.input === 'buzzer' ? current.lyrics : undefined}
               tts={state.round.tts ?? { seq: 0, rate: 1 }}
               revealed={state.round.phase === 'revealed'}
+              onEnd={(seq) => dispatch({ type: 'TTS_ENDED', seq })}
             />
           )}
           {isMusicRound && (
