@@ -23,7 +23,7 @@ function hintOf(title: string, year?: number): string {
 }
 
 const song = (title: string, artist: string, lyrics: string, year?: number, accept?: string[]) =>
-  lyricQ(title, artist, lyrics, accept, hintOf(title, year));
+  lyricQ(title, artist, lyrics, accept, hintOf(title, year), year);
 
 export const ttsQuiz: QuizType = {
   kind: 'tts',

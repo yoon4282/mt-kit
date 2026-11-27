@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import type { McAction } from '../game/reducer';
 import { QUIZ_TYPES, findCategory } from '../data/quizzes';
-import type { QuizKind } from '../data/quiz';
+import { TTS_HINT_SCORES, type QuizKind } from '../data/quiz';
+
+const TTS_HINT_LABEL = ['힌트 없음', '가수 공개', '제목 초성 공개'] as const;
 import type { McView } from '../types';
 import { TimerRing } from './TimerRing';
 import { ZOOM_SCALE } from './ZoomFrame';
@@ -196,7 +198,22 @@ export function QuizControl({ view, send }: { view: McView; send: (a: McAction) 
               <button type="button" className="btn sm" onClick={() => send({ type: 'TTS_PLAY', rate: 1.3 })}>
                 🐇 빠르게 읽기 (1.3배속)
               </button>
-              <span className="muted small">전광판 스피커로 읽어요{round.tts.seq ? ` · 현재 ${round.tts.rate}배속` : ''} · 낭독이 시작되면 버저가 열려요</span>
+              <span className="muted small">전광판 스피커로 읽어요{round.tts.seq ? ` · 현재 ${round.tts.rate}배속` : ''} · 낭독이 끝나야 버저가 열려요 (다시 들을 땐 잠시 닫힘)</span>
+            </div>
+          )}
+
+          {/* 가사 낭독: 힌트 단계 (줌인처럼 단계가 오를수록 권장 배점이 내려감) */}
+          {q?.isTts && (
+            <div className="tts-row">
+              <span className="muted small">
+                💡 힌트 {round.ttsHint}단계 ({TTS_HINT_LABEL[round.ttsHint - 1]}) · 권장 배점 +{TTS_HINT_SCORES[round.ttsHint - 1]}
+              </span>
+              <button type="button" className="btn sm go" disabled={round.ttsHint >= 3 || round.phase === 'ready' || round.phase === 'revealed'} onClick={() => send({ type: 'TTS_HINT_MORE' })}>
+                💡 힌트 공개 ({round.ttsHint === 1 ? '가수' : round.ttsHint === 2 ? '제목 초성' : '모두 공개됨'})
+              </button>
+              <button type="button" className="btn ghost sm" disabled={round.ttsHint <= 1} onClick={() => send({ type: 'TTS_HINT_SET', level: 1 })}>
+                ↺ 힌트 숨기기
+              </button>
             </div>
           )}
 

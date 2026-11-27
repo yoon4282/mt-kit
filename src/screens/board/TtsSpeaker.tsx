@@ -7,6 +7,8 @@ interface Props {
   tts: { seq: number; rate: number };
   /** 정답 공개 후에는 낭독을 멈추고 조용히 */
   revealed: boolean;
+  /** seq 번째 낭독이 끝남 (오류로 못 읽은 경우 포함) → 버저 열기 */
+  onEnd?: (seq: number) => void;
 }
 
 const koVoice = () => window.speechSynthesis?.getVoices().find((v) => v.lang.toLowerCase().replace('_', '-').startsWith('ko'));
@@ -16,10 +18,12 @@ const koVoice = () => window.speechSynthesis?.getVoices().find((v) => v.lang.toL
  * 감정 없는 기계음처럼 들리도록 억양(pitch)을 낮추고 일정한 속도로 읽고,
  * 화면에는 가사 대신 음파 애니메이션만 보여 준다.
  */
-export function TtsSpeaker({ lyrics, tts, revealed }: Props) {
+export function TtsSpeaker({ lyrics, tts, revealed, onEnd }: Props) {
   const lastSeq = useRef(tts.seq);
   const lyricsRef = useRef(lyrics);
   lyricsRef.current = lyrics;
+  const onEndRef = useRef(onEnd);
+  onEndRef.current = onEnd;
   const [speaking, setSpeaking] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [noKorean, setNoKorean] = useState(false);
@@ -44,11 +48,14 @@ export function TtsSpeaker({ lyrics, tts, revealed }: Props) {
   useEffect(() => {
     if (tts.seq === lastSeq.current) return;
     lastSeq.current = tts.seq;
+    const seq = tts.seq;
+    // 낭독이 끝나거나 실패하면 버저를 열도록 알림 (진행이 멈추지 않게)
+    const done = () => onEndRef.current?.(seq);
     const text = lyricsRef.current;
-    if (!text) return;
+    if (!text) return done();
     if (!supported) {
       setError('이 브라우저는 음성 합성을 지원하지 않아요 (크롬/엣지를 사용하세요)');
-      return;
+      return done();
     }
     setError(null);
     window.speechSynthesis.cancel();
@@ -60,11 +67,17 @@ export function TtsSpeaker({ lyrics, tts, revealed }: Props) {
     u.pitch = 0.8; // 낮고 평평한 기계음 느낌
     u.volume = 1;
     u.onstart = () => setSpeaking(true);
-    u.onend = () => setSpeaking(false);
+    u.onend = () => {
+      setSpeaking(false);
+      done();
+    };
     u.onerror = (e) => {
       setSpeaking(false);
-      if (e.error !== 'canceled' && e.error !== 'interrupted')
+      // canceled/interrupted 는 다시 듣기·문제 변경으로 끊긴 것 → 새 낭독이 이어받음
+      if (e.error !== 'canceled' && e.error !== 'interrupted') {
         setError(e.error === 'not-allowed' ? '소리 켜기를 먼저 눌러 주세요 (브라우저가 자동 재생을 막았어요)' : `낭독 오류: ${e.error}`);
+        done();
+      }
     };
     // cancel() 직후 바로 speak() 하면 크롬에서 씹히는 경우가 있어 한 틱 뒤에 실행
     window.setTimeout(() => window.speechSynthesis.speak(u), 60);

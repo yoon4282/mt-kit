@@ -200,7 +200,7 @@ export function PlayerRemote({ room, bot = false }: { room: string; bot?: boolea
                     q.isMusic && view.round.phase === 'live'
                       ? '🎧 노래가 끝나면 버저가 열려요'
                       : q.isTts && view.round.phase === 'live'
-                        ? '🤖 MC가 가사를 읽으면 버저가 열려요'
+                        ? '🤖 가사 낭독이 끝나면 버저가 열려요'
                         : undefined
                   }
                 />
