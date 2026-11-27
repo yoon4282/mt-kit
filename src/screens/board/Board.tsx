@@ -190,6 +190,15 @@ export function Board() {
     }
   })();
 
+  // 줌인 사진은 문제를 불러오는 순간 미리 받아 둠 (공개 때 늦게 뜨지 않도록)
+  const zoomPhotoSrc = current?.input === 'buzzer' ? current.art?.photo?.src : undefined;
+  useEffect(() => {
+    if (!zoomPhotoSrc) return;
+    const img = new Image();
+    img.referrerPolicy = 'no-referrer';
+    img.src = zoomPhotoSrc;
+  }, [zoomPhotoSrc]);
+
   const isMusicRound = state.round.kind === 'music';
   const baseMedia = current?.input === 'buzzer' ? current.media : undefined;
   const ov = current ? songOverrides[current.id] : undefined;

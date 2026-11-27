@@ -10,10 +10,23 @@ export interface Media {
 }
 
 /** 줌인 퀴즈 그림: 100x100 좌표계의 SVG 마크업 + 처음 보여줄 확대 구역(fx, fy: 0~100 %) */
+export interface ZoomPhoto {
+  /** 사진 주소 (위키미디어 커먼즈 썸네일 등). 불러오지 못하면 svg 그림으로 대신 보여줌 */
+  src: string;
+  /** 'cover': 정사각형 프레임을 꽉 채움(사진) · 'contain': 전체가 보이게(로고·국기) */
+  fit: 'cover' | 'contain';
+  /** 출처 표기 (작성자 · 라이선스) */
+  credit: string;
+  /** 원본 파일 설명 페이지 */
+  page: string;
+}
+
 export interface ZoomArt {
+  /** 직접 그린 SVG — 사진이 없거나 불러오지 못할 때 대신 쓰는 그림 */
   svg: string;
   fx: number;
   fy: number;
+  photo?: ZoomPhoto;
 }
 
 interface QBase {

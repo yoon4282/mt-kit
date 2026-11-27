@@ -84,6 +84,7 @@ export function toMcView(state: GameState, roomId: string): McView {
           hint: q.hint,
           hasMedia: q.input === 'buzzer' ? !!q.media : undefined,
           art: q.input === 'buzzer' ? q.art?.svg : undefined,
+          artPhoto: q.input === 'buzzer' ? q.art?.photo : undefined,
           lyrics: q.input === 'buzzer' ? q.lyrics : undefined,
           answers: Object.fromEntries(Object.entries(state.round.answers).map(([id, a]) => [id, a.value])),
         }

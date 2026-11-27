@@ -52,8 +52,13 @@ export function SecretSheet({ view, guarded }: { view: McView; guarded?: boolean
           <div className="secret-q">{s.prompt}</div>
           {s.art && (
             <div className="secret-art">
-              <ArtPreview svg={s.art} />
-              <small className="muted">전체 원본 그림 · 전광판은 지금 {ZOOM_SCALE[round.zoom] * 100}% 로 보여 주는 중</small>
+              <ArtPreview svg={s.art} photo={s.artPhoto} />
+              <small className="muted">전체 원본 {s.artPhoto ? '사진' : '그림'} · 전광판은 지금 {ZOOM_SCALE[round.zoom] * 100}% 로 보여 주는 중</small>
+              {s.artPhoto && (
+                <small className="muted">
+                  📷 <a href={s.artPhoto.page} target="_blank" rel="noreferrer">{s.artPhoto.credit}</a>
+                </small>
+              )}
             </div>
           )}
           {s.lyrics && <div className="secret-lyrics">🗣 읽는 가사: “{s.lyrics}”</div>}

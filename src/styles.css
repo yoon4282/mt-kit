@@ -565,7 +565,10 @@ input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
 /* ───────── 줌인 / 가사 낭독 퀴즈 ───────── */
 .zoom-frame { position: relative; width: min(100%, 460px); aspect-ratio: 1; margin: 0 auto; overflow: hidden; border-radius: 22px; background: #fff; box-shadow: 0 8px 30px rgba(0,0,0,.35); }
 .zoom-art { position: absolute; inset: 0; transform-origin: 0 0; transition: transform .9s cubic-bezier(.25,.8,.25,1); }
-.zoom-art svg { width: 100%; height: 100%; display: block; }
+.zoom-svg { position: absolute; inset: 0; }
+.zoom-svg svg, .art-preview svg { width: 100%; height: 100%; display: block; }
+.zoom-art img, .art-preview img { width: 100%; height: 100%; display: block; user-select: none; }
+.zoom-credit { position: absolute; left: 8px; bottom: 8px; max-width: calc(100% - 16px); background: rgba(20,17,43,.72); color: #fff; font-size: .72rem; padding: 2px 8px; border-radius: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .zoom-badge { position: absolute; right: 10px; top: 10px; background: rgba(20,17,43,.8); color: #fff; font-weight: 800; padding: 4px 12px; border-radius: 999px; font-size: 1rem; }
 .art-preview { width: 150px; aspect-ratio: 1; border-radius: 14px; overflow: hidden; background: #fff; }
 .art-preview svg { width: 100%; height: 100%; display: block; }

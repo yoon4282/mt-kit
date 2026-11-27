@@ -204,6 +204,8 @@ export interface McSecret {
   hasMedia?: boolean;
   /** 줌인: 전체 원본 그림 (SVG 마크업) — MC 에게만 전송 */
   art?: string;
+  /** 줌인: 실제 사진 정보 (있으면 MC 비밀 정답지에 사진을 보여 줌) */
+  artPhoto?: { src: string; fit: 'cover' | 'contain'; credit: string; page: string };
   /** 가사 TTS: 읽어 주는 가사 전문 — MC 에게만 전송 */
   lyrics?: string;
   /** 정답 공개 전에도 MC 는 제출 내용을 볼 수 있음 */
