@@ -48,7 +48,7 @@ export function ControlPanel({ view, send, compact }: Props) {
   // 가사 낭독 퀴즈도 같은 방식: 힌트 없음 +30 → 가수 공개 +20 → 제목 초성 +10
   const stepLive = !!view.round.question && view.round.phase !== 'ready' && view.round.phase !== 'revealed';
   const zoomLive = stepLive && view.round.kind === 'zoom';
-  const ttsLive = stepLive && view.round.kind === 'tts';
+  const ttsLive = stepLive && (view.round.kind === 'tts' || view.round.kind === 'music');
   const suggest = zoomLive ? ([30, 20, 10] as const)[view.round.zoom - 1] : ttsLive ? TTS_HINT_SCORES[view.round.ttsHint - 1] : null;
 
   const buzzOrder = view.buzzer.order;
@@ -222,7 +222,7 @@ export function ControlPanel({ view, send, compact }: Props) {
           </button>
         </form>
         {suggest !== null && zoomLive && <p className="hint">🔍 줌인 {view.round.zoom}단계({ZOOM_PCT[view.round.zoom]}%) 권장 배점: <b>+{suggest}점</b></p>}
-        {suggest !== null && ttsLive && <p className="hint">💡 가사 낭독 힌트 {view.round.ttsHint}단계 권장 배점: <b>+{suggest}점</b></p>}
+        {suggest !== null && ttsLive && <p className="hint">💡 {view.round.kind === 'music' ? '음악' : '가사 낭독'} 힌트 {view.round.ttsHint}단계 권장 배점: <b>+{suggest}점</b></p>}
         {!selected.length && <p className="hint">위에서 {view.mode === 'individual' ? '참가자' : '팀'}를 먼저 선택하세요 (여러 명 동시 선택 가능)</p>}
         <div className="row undo-row">
           <button type="button" className="btn ghost" disabled={!view.canUndo} onClick={() => send({ type: 'UNDO' })}>

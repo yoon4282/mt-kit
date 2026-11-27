@@ -202,8 +202,8 @@ export function QuizControl({ view, send }: { view: McView; send: (a: McAction) 
             </div>
           )}
 
-          {/* 가사 낭독: 힌트 단계 (줌인처럼 단계가 오를수록 권장 배점이 내려감) */}
-          {q?.isTts && (
+          {/* 가사 낭독·음악: 힌트 단계 (줌인처럼 단계가 오를수록 권장 배점이 내려감) */}
+          {(q?.isTts || q?.isMusic) && (
             <div className="tts-row">
               <span className="muted small">
                 💡 힌트 {round.ttsHint}단계 ({TTS_HINT_LABEL[round.ttsHint - 1]}) · 권장 배점 +{TTS_HINT_SCORES[round.ttsHint - 1]}
