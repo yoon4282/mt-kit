@@ -148,14 +148,22 @@ export const choice = (prompt: string, choices: [string, string, string, string]
   hint,
 });
 
-/** 음악 퀴즈: 제목·가수·연도 + 유튜브 공식 영상 ID·후렴 시작 초 */
-export const song = (title: string, artist: string, year: number, youtubeId: string, startSec: number, accept?: string[]): Draft<BuzzerQ> => ({
+/** 노래 제목 힌트: 한글 제목은 초성, 영어가 섞인 제목은 정답이 새지 않도록 글자 수만 */
+export function titleHint(title: string): string {
+  return /[A-Za-z]/.test(title)
+    ? `제목 ${title.replace(/[^0-9A-Za-z가-힣]/g, '').length}글자${/[가-힣]/.test(title) ? ' (영어 포함)' : ' (영어 제목)'}`
+    : `제목 초성 ${toChosung(title)}`;
+}
+
+/** 음악 퀴즈: 제목·가수·연도 + 유튜브 공식 영상 ID·후렴 시작 초 (hint 생략 시 가수·연도·제목 힌트 자동 생성) */
+export const song = (title: string, artist: string, year: number, youtubeId: string, startSec: number, accept?: string[], hint?: string): Draft<BuzzerQ> => ({
   input: 'buzzer',
   prompt: '🎵 이 노래의 제목은?',
   answer: title,
   artist,
   year,
   accept,
+  hint: hint ?? `🎤 ${artist} · ${year}년 발매 · ${titleHint(title)}`,
   media: youtubeId ? { youtubeId, startSec } : undefined,
   explanation: `${artist} · ${year}년`,
 });
