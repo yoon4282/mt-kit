@@ -74,6 +74,10 @@ export interface RoundState {
   answers: Record<string, { value: string; at: number }>;
   /** 음악 재생 트리거: seq 가 바뀌면 전광판이 sec 초만큼 재생 (null = 끝까지) */
   clip: { seq: number; sec: number | null };
+  /** 줌인 퀴즈 확대 단계: 1 = 400% (일부만), 2 = 200%, 3 = 100% (전체) */
+  zoom: 1 | 2 | 3;
+  /** 가사 TTS 낭독 트리거: seq 가 바뀌면 전광판이 rate 배속으로 가사를 읽음 */
+  tts: { seq: number; rate: number };
   /** 문제가 공개된 시각 (반응 속도 계산용) */
   startedAt: number | null;
   /** 자동 채점을 이미 한 문제 ID (중복 채점 방지) */
@@ -130,6 +134,10 @@ export interface PublicQuestion {
   prompt: string | null;
   choices?: string[];
   isMusic: boolean;
+  /** 줌인 퀴즈 (그림은 전광판이 자기 데이터에서 직접 그림 — 폰에는 전송하지 않음) */
+  isZoom: boolean;
+  /** 가사 TTS 퀴즈 (가사는 전송하지 않음) */
+  isTts: boolean;
 }
 
 export interface RoundView {
@@ -142,6 +150,10 @@ export interface RoundView {
   number: number;
   total: number;
   phase: Phase;
+  /** 줌인 확대 단계 (1~3) */
+  zoom: 1 | 2 | 3;
+  /** 가사 낭독 횟수(seq)와 마지막 배속 — MC 화면 표시용 (가사 자체는 포함하지 않음) */
+  tts: { seq: number; rate: number };
   question: PublicQuestion | null;
   /** 제출한 사람 목록 (값은 정답 공개 전까지 비공개) */
   answeredIds: string[];
@@ -190,6 +202,10 @@ export interface McSecret {
   hint?: string;
   /** 음악: 재생 가능 여부 */
   hasMedia?: boolean;
+  /** 줌인: 전체 원본 그림 (SVG 마크업) — MC 에게만 전송 */
+  art?: string;
+  /** 가사 TTS: 읽어 주는 가사 전문 — MC 에게만 전송 */
+  lyrics?: string;
   /** 정답 공개 전에도 MC 는 제출 내용을 볼 수 있음 */
   answers: Record<string, string>;
 }

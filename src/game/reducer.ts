@@ -33,6 +33,11 @@ export type McAction =
   | { type: 'END_ROUND' }
   | { type: 'SET_SHUFFLE'; on: boolean }
   | { type: 'PLAY_CLIP'; sec: number | null }
+  // 줌인 퀴즈: 1 = 400%, 2 = 200%, 3 = 전체(100%)
+  | { type: 'ZOOM_SET'; level: 1 | 2 | 3 }
+  | { type: 'ZOOM_WIDEN' }
+  // 가사 TTS 낭독: rate 생략 시 직전 속도로 다시 읽기
+  | { type: 'TTS_PLAY'; rate?: number }
   // 타이머
   | { type: 'TIMER_SET'; sec: number }
   | { type: 'TIMER_RESUME' }
@@ -57,7 +62,7 @@ const MC_ACTION_TYPES = new Set<McAction['type']>([
   'SET_MODE', 'AWARD', 'UNDO', 'RENAME_TEAM', 'RESET_SCORES', 'REMOVE_PLAYER', 'SHOW_PODIUM',
   'BUZZER_OPEN', 'BUZZER_LOCK', 'BUZZER_RESET', 'BUZZ_WRONG',
   'PICK_CATEGORY', 'LOAD_QUESTION', 'NEXT_QUESTION', 'RANDOM_QUESTION', 'PREV_QUESTION', 'START', 'CLOSE', 'REVEAL', 'END_ROUND',
-  'SET_SHUFFLE', 'PLAY_CLIP', 'TIMER_SET', 'TIMER_RESUME', 'TIMER_PAUSE', 'TIMER_RESET',
+  'SET_SHUFFLE', 'PLAY_CLIP', 'ZOOM_SET', 'ZOOM_WIDEN', 'TTS_PLAY', 'TIMER_SET', 'TIMER_RESUME', 'TIMER_PAUSE', 'TIMER_RESET',
 ]);
 
 /** 네트워크로 받은 MC 명령 검증 (참가자용 액션이 섞여 들어오지 않도록) */
@@ -86,6 +91,7 @@ export function createInitialState(): GameState {
     round: {
       kind: null, categoryId: null, questionId: null, phase: 'ready',
       asked: [], used: [], shuffle: false, answers: {}, clip: { seq: 0, sec: null },
+      zoom: 1, tts: { seq: 0, rate: 1 },
       startedAt: null, scored: [],
     },
     timer: makeTimer(DEFAULT_SEC),
@@ -199,6 +205,8 @@ function loadQuestion(state: GameState, questionId: string, pushHistory: boolean
       used: state.round.used.includes(questionId) ? state.round.used : [...state.round.used, questionId],
       answers: {},
       startedAt: null,
+      zoom: 1, // 줌인: 항상 400% 부터
+      tts: { seq: state.round.tts?.seq ?? 0, rate: 1 },
     },
     buzzer: { ...state.buzzer, open: false, order: [], out: [] },
     timer: makeTimer(ref.type.defaultSec),
@@ -444,6 +452,8 @@ function reduce(state: GameState, action: GameAction): GameState {
       if (!ref || state.round.phase === 'revealed') return state;
       const isBuzzer = ref.question.input === 'buzzer';
       const isMusic = !!(ref.question.input === 'buzzer' && ref.question.media);
+      // 가사 낭독 문제는 MC 가 [가사 낭독 재생]을 누를 때 버저가 열림 (TTS_PLAY)
+      const isTts = !!(ref.question.input === 'buzzer' && ref.question.lyrics);
       const fresh = state.round.phase === 'ready';
       return {
         ...state,
@@ -457,8 +467,8 @@ function reduce(state: GameState, action: GameAction): GameState {
         // 버저 문제: 바로 열림. 음악 문제는 노래가 끝나면(CLIP_ENDED) 열림
         buzzer: isBuzzer
           ? fresh
-            ? { open: !isMusic, order: [], out: [], round: state.buzzer.round + 1 }
-            : { ...state.buzzer, open: true }
+            ? { open: !isMusic && !isTts, order: [], out: [], round: state.buzzer.round + 1 }
+            : { ...state.buzzer, open: isTts ? state.buzzer.open : true }
           : { ...state.buzzer, open: false },
         // 버저 문제는 타이머 없이 진행 (MC가 판정). O/X·4지선다만 타이머
         timer: isBuzzer
@@ -507,6 +517,31 @@ function reduce(state: GameState, action: GameAction): GameState {
         ...state,
         round: { ...state.round, clip: { seq: state.round.clip.seq + 1, sec } },
         buzzer: closeBuzzer ? { ...state.buzzer, open: false } : state.buzzer,
+      };
+    }
+
+    case 'ZOOM_SET': {
+      if (state.round.kind !== 'zoom' || !state.round.questionId) return state;
+      const level = action.level === 2 || action.level === 3 ? action.level : 1;
+      return { ...state, round: { ...state.round, zoom: level } };
+    }
+
+    case 'ZOOM_WIDEN': {
+      if (state.round.kind !== 'zoom' || !state.round.questionId) return state;
+      const cur = state.round.zoom ?? 1;
+      return cur >= 3 ? state : { ...state, round: { ...state.round, zoom: (cur + 1) as 2 | 3 } };
+    }
+
+    case 'TTS_PLAY': {
+      if (state.round.kind !== 'tts' || !state.round.questionId || state.round.phase === 'revealed') return state;
+      // 아직 문제가 공개 전이면 먼저 시작(공개)시킨 뒤 낭독
+      const base = state.round.phase === 'ready' ? reduce(state, { type: 'START' }) : state;
+      const rate = Math.max(0.5, Math.min(2, action.rate ?? base.round.tts?.rate ?? 1));
+      return {
+        ...base,
+        round: { ...base.round, tts: { seq: (base.round.tts?.seq ?? 0) + 1, rate } },
+        // 낭독과 동시에 버저 열림 (이미 누른 순서는 유지)
+        buzzer: { ...base.buzzer, open: true },
       };
     }
 

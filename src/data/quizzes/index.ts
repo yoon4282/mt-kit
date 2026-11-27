@@ -5,8 +5,10 @@ import { choiceQuiz } from './choice';
 import { emojiQuiz } from './emoji';
 import { speedQuiz } from './speed';
 import { musicQuiz } from './music';
+import { zoomQuiz } from './zoom';
+import { ttsQuiz } from './tts';
 
-export const QUIZ_TYPES: QuizType[] = [chosungQuiz, oxQuiz, choiceQuiz, emojiQuiz, speedQuiz, musicQuiz];
+export const QUIZ_TYPES: QuizType[] = [chosungQuiz, oxQuiz, choiceQuiz, emojiQuiz, speedQuiz, musicQuiz, zoomQuiz, ttsQuiz];
 
 export interface QuestionRef {
   type: QuizType;
@@ -31,8 +33,10 @@ export function validateQuizzes(): string[] {
   const problems: string[] = [];
   for (const type of QUIZ_TYPES) {
     for (const cat of type.categories) {
+      // 줌인·가사 낭독 퀴즈는 샘플(각 10문제)이라 문항 수 검사를 건너뜀
       const expected = type.kind === 'music' ? 50 : 20;
-      if (cat.questions.length !== expected) problems.push(`${type.title}/${cat.name}: ${cat.questions.length}문항 (기대 ${expected})`);
+      if (type.kind !== 'zoom' && type.kind !== 'tts' && cat.questions.length !== expected)
+        problems.push(`${type.title}/${cat.name}: ${cat.questions.length}문항 (기대 ${expected})`);
       const answers = new Set<string>();
       for (const q of cat.questions) {
         if (!q.prompt.trim()) problems.push(`${q.id}: 문제 비어 있음`);
@@ -44,7 +48,9 @@ export function validateQuizzes(): string[] {
         }
         if (q.input === 'buzzer' && type.kind === 'music' && !q.media) problems.push(`${q.id}: 음악 영상 없음`);
         // 같은 문제가 두 번 들어갔는지 (음악·맞춤법처럼 문구가 같은 유형은 정답/보기로 비교)
-        const key = type.kind === 'music' ? String(q.answer) : q.input === 'choice' ? q.prompt + q.choices.join('|') : q.prompt;
+        if (type.kind === 'zoom' && !(q.input === 'buzzer' && q.art)) problems.push(`${q.id}: 줌인 그림 없음`);
+        if (type.kind === 'tts' && !(q.input === 'buzzer' && q.lyrics?.trim())) problems.push(`${q.id}: 가사 없음`);
+        const key = type.kind === 'music' || type.kind === 'zoom' || type.kind === 'tts' ? String(q.answer) : q.input === 'choice' ? q.prompt + q.choices.join('|') : q.prompt;
         if (answers.has(key)) problems.push(`${q.id}: 같은 카테고리에 중복 (${key})`);
         answers.add(key);
       }

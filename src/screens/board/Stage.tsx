@@ -1,11 +1,13 @@
 import type { PublicView } from '../../types';
+import type { ZoomArt } from '../../data/quiz';
+import { ZoomFrame } from '../../components/ZoomFrame';
 import { TeamChip } from '../../components/TeamChip';
 import { TimerRing } from '../../components/TimerRing';
 
 const CHOICE_COLORS = ['#ff5d73', '#4dabff', '#ffc94d', '#4ee0a1'];
 
 /** 전광판 중앙 무대 — 대기 / 문제 / 마감 / 정답 공개 (음악 플레이어는 Board 에서 고정 위치에 렌더) */
-export function Stage({ view }: { view: PublicView }) {
+export function Stage({ view, art }: { view: PublicView; art?: ZoomArt }) {
   const { round } = view;
   if (!round.kind) return <FreeStage view={view} />;
 
@@ -56,6 +58,9 @@ export function Stage({ view }: { view: PublicView }) {
             </div>
           )}
           {q.isMusic && <div className="q-prompt">{q.prompt}</div>}
+          {q.isZoom && art && (
+            <ZoomFrame art={art} level={round.phase === 'revealed' ? 3 : round.zoom} />
+          )}
 
           {q.input === 'ox' && (
             <>
@@ -158,7 +163,12 @@ function BuzzList({ view }: { view: PublicView }) {
     .filter((b) => b.player);
   if (!order.length) {
     const musicWait = view.round.kind === 'music' && view.round.phase === 'live' && !view.buzzer.open;
-    return <div className="answered">{view.buzzer.open ? '🔔 버저 오픈!' : musicWait ? '🎧 노래가 끝나면 버저가 열려요' : '버저 대기'}</div>;
+    const ttsWait = view.round.kind === 'tts' && view.round.phase === 'live' && !view.buzzer.open;
+    return (
+      <div className="answered">
+        {view.buzzer.open ? '🔔 버저 오픈!' : musicWait ? '🎧 노래가 끝나면 버저가 열려요' : ttsWait ? '🤖 낭독이 시작되면 버저가 열려요' : '버저 대기'}
+      </div>
+    );
   }
   const [first, ...rest] = order;
   return (

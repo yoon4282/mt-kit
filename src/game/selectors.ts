@@ -31,6 +31,8 @@ function roundView(state: GameState): RoundView {
     number: pos >= 0 ? pos + 1 : 0,
     total: cat?.questions.length ?? 0,
     phase: round.phase,
+    zoom: round.zoom ?? 1,
+    tts: round.tts ?? { seq: 0, rate: 1 },
     question: q
       ? {
           id: q.id,
@@ -39,6 +41,8 @@ function roundView(state: GameState): RoundView {
           prompt: round.phase === 'ready' ? null : q.prompt,
           choices: q.input === 'choice' && round.phase !== 'ready' ? q.choices : undefined,
           isMusic: q.input === 'buzzer' && !!q.media,
+          isZoom: q.input === 'buzzer' && !!q.art,
+          isTts: q.input === 'buzzer' && !!q.lyrics,
         }
       : null,
     answeredIds: Object.keys(round.answers),
@@ -79,6 +83,8 @@ export function toMcView(state: GameState, roomId: string): McView {
           explanation: q.explanation,
           hint: q.hint,
           hasMedia: q.input === 'buzzer' ? !!q.media : undefined,
+          art: q.input === 'buzzer' ? q.art?.svg : undefined,
+          lyrics: q.input === 'buzzer' ? q.lyrics : undefined,
           answers: Object.fromEntries(Object.entries(state.round.answers).map(([id, a]) => [id, a.value])),
         }
       : null,

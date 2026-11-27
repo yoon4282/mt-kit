@@ -359,7 +359,7 @@ input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
 
 /* MC 진행 컨트롤 */
 .quiz-ctl { display: flex; flex-direction: column; gap: 12px; }
-.kind-tabs { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; }
+.kind-tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
 .kind-tabs button { border: 1px solid var(--line); background: var(--bg2); border-radius: 10px; padding: 6px 2px; display: flex; flex-direction: column; align-items: center; gap: 2px; }
 .kind-tabs button span { font-size: 1.3rem; }
 .kind-tabs button small { font-size: .65rem; color: var(--muted); white-space: nowrap; }
@@ -561,3 +561,22 @@ input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
 .share-wrap { display: flex; flex-direction: column; align-items: stretch; gap: 4px; }
 .share-msg { font-size: .75rem; color: var(--go); text-align: center; }
 .mc-share .btn.kakao { width: 100%; }
+
+/* ───────── 줌인 / 가사 낭독 퀴즈 ───────── */
+.zoom-frame { position: relative; width: min(100%, 460px); aspect-ratio: 1; margin: 0 auto; overflow: hidden; border-radius: 22px; background: #fff; box-shadow: 0 8px 30px rgba(0,0,0,.35); }
+.zoom-art { position: absolute; inset: 0; transform-origin: 0 0; transition: transform .9s cubic-bezier(.25,.8,.25,1); }
+.zoom-art svg { width: 100%; height: 100%; display: block; }
+.zoom-badge { position: absolute; right: 10px; top: 10px; background: rgba(20,17,43,.8); color: #fff; font-weight: 800; padding: 4px 12px; border-radius: 999px; font-size: 1rem; }
+.art-preview { width: 150px; aspect-ratio: 1; border-radius: 14px; overflow: hidden; background: #fff; }
+.art-preview svg { width: 100%; height: 100%; display: block; }
+.secret-art { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; margin: 6px 0; }
+.secret-lyrics { margin: 6px 0; padding: 8px 10px; background: rgba(255,255,255,.06); border-radius: 10px; line-height: 1.4; }
+.zoom-row, .tts-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 8px; }
+.btn.preset.suggest { outline: 3px solid #ffd54a; outline-offset: -3px; box-shadow: 0 0 14px rgba(255,213,74,.7); }
+.tts-wave { width: 100%; max-width: 560px; min-height: 180px; margin: 0 auto; border-radius: 18px; background: linear-gradient(135deg, #2d2370, #3a1d5c); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 18px; }
+.wave-bars { display: flex; gap: 6px; align-items: center; height: 90px; }
+.wave-bars span { width: 8px; height: 12%; background: #7ee8ff; border-radius: 6px; }
+.tts-wave.speaking .wave-bars span { animation: wave .5s ease-in-out infinite alternate; }
+@keyframes wave { from { height: 10%; } to { height: 100%; } }
+.tts-warn { color: #ffd54a; font-size: .85rem; text-align: center; }
+.buzzer.red.open:not(.pressed) { background: #e11d2e; color: #fff; box-shadow: 0 10px 0 #7f0f19, 0 0 40px rgba(225,29,46,.55); }

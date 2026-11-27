@@ -195,7 +195,14 @@ export function PlayerRemote({ room, bot = false }: { room: string; bot?: boolea
                   buzzIdx={buzzIdx}
                   onPress={buzz}
                   disabled={!canBuzz && !pressed}
-                  waitHint={q.isMusic && view.round.phase === 'live' ? '🎧 노래가 끝나면 버저가 열려요' : undefined}
+                  red={q.isZoom || q.isTts}
+                  waitHint={
+                    q.isMusic && view.round.phase === 'live'
+                      ? '🎧 노래가 끝나면 버저가 열려요'
+                      : q.isTts && view.round.phase === 'live'
+                        ? '🤖 MC가 가사를 읽으면 버저가 열려요'
+                        : undefined
+                  }
                 />
               )}
 
@@ -291,6 +298,7 @@ function Buzzer({
   onPress,
   disabled,
   waitHint,
+  red,
 }: {
   open: boolean;
   pressed: boolean;
@@ -300,10 +308,12 @@ function Buzzer({
   disabled: boolean;
   /** 버저가 닫혀 있을 때 안내 문구 */
   waitHint?: string;
+  /** 줌인·가사 퀴즈: 대형 빨간 [버저 누르기!] */
+  red?: boolean;
 }) {
   return (
-    <button type="button" className={`buzzer ${open && !isOut ? 'open' : ''} ${pressed ? 'pressed' : ''} ${isOut ? 'out' : ''}`} onPointerDown={onPress} disabled={disabled}>
-      {isOut ? '이번 문제 기회 끝' : pressed ? (buzzIdx >= 0 ? `${buzzIdx + 1}번째로 눌렀어요!` : '전송 중…') : open ? '누르기!' : '대기 중'}
+    <button type="button" className={`buzzer ${red ? 'red' : ''} ${open && !isOut ? 'open' : ''} ${pressed ? 'pressed' : ''} ${isOut ? 'out' : ''}`} onPointerDown={onPress} disabled={disabled}>
+      {isOut ? '이번 문제 기회 끝' : pressed ? (buzzIdx >= 0 ? `${buzzIdx + 1}번째로 눌렀어요!` : '전송 중…') : open ? (red ? '버저 누르기!' : '누르기!') : '대기 중'}
       <small>
         {isOut ? '다른 사람의 답을 기다려요' : open ? (pressed ? 'MC의 판정을 기다려요' : '가장 먼저 누르세요') : (waitHint ?? 'MC가 버저를 열면 누를 수 있어요')}
       </small>

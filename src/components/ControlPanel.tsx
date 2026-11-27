@@ -5,6 +5,7 @@ import type { McView, Mode } from '../types';
 import { TeamChip, teamStyle } from './TeamChip';
 
 const PRESETS = [10, 20, 30, 50, -10];
+const ZOOM_PCT = { 1: 400, 2: 200, 3: 100 } as const;
 
 interface Props {
   view: McView;
@@ -41,6 +42,10 @@ export function ControlPanel({ view, send, compact }: Props) {
   };
 
   const setMode = (mode: Mode) => send({ type: 'SET_MODE', mode });
+
+  // 줌인 퀴즈: 확대 단계별 권장 배점 (400% +30 → 200% +20 → 100% +10) 을 프리셋에서 강조
+  const zoomLive = view.round.kind === 'zoom' && !!view.round.question && view.round.phase !== 'ready' && view.round.phase !== 'revealed';
+  const suggest = zoomLive ? ([30, 20, 10] as const)[view.round.zoom - 1] : null;
 
   const buzzOrder = view.buzzer.order;
   const firstBuzzer = buzzOrder[0];
@@ -186,7 +191,7 @@ export function ControlPanel({ view, send, compact }: Props) {
             <button
               type="button"
               key={pt}
-              className={`btn preset ${pt < 0 ? 'minus' : ''}`}
+              className={`btn preset ${pt < 0 ? 'minus' : ''} ${pt === suggest ? 'suggest' : ''}`}
               disabled={!selected.length}
               onClick={() => award(pt)}
             >
@@ -212,6 +217,7 @@ export function ControlPanel({ view, send, compact }: Props) {
             부여
           </button>
         </form>
+        {suggest !== null && <p className="hint">🔍 줌인 {view.round.zoom}단계({ZOOM_PCT[view.round.zoom]}%) 권장 배점: <b>+{suggest}점</b></p>}
         {!selected.length && <p className="hint">위에서 {view.mode === 'individual' ? '참가자' : '팀'}를 먼저 선택하세요 (여러 명 동시 선택 가능)</p>}
         <div className="row undo-row">
           <button type="button" className="btn ghost" disabled={!view.canUndo} onClick={() => send({ type: 'UNDO' })}>

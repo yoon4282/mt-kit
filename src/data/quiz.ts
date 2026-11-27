@@ -1,12 +1,19 @@
 // ───────────── 퀴즈 데이터 타입 & 작성 도우미 ─────────────
 
-export type QuizKind = 'chosung' | 'ox' | 'choice' | 'emoji' | 'speed' | 'music';
+export type QuizKind = 'chosung' | 'ox' | 'choice' | 'emoji' | 'speed' | 'music' | 'zoom' | 'tts';
 export type InputKind = 'buzzer' | 'ox' | 'choice';
 
 export interface Media {
   youtubeId: string;
   /** 하이라이트(후렴) 시작 위치 (초) */
   startSec: number;
+}
+
+/** 줌인 퀴즈 그림: 100x100 좌표계의 SVG 마크업 + 처음 보여줄 확대 구역(fx, fy: 0~100 %) */
+export interface ZoomArt {
+  svg: string;
+  fx: number;
+  fy: number;
 }
 
 interface QBase {
@@ -23,6 +30,10 @@ export interface BuzzerQ extends QBase {
   accept?: string[];
   /** 음악 퀴즈 전용 */
   media?: Media;
+  /** 줌인 퀴즈 전용 */
+  art?: ZoomArt;
+  /** TTS 가사 퀴즈 전용: 브라우저 음성합성이 읽는 가사 (전광판·참가자 화면에는 표시하지 않음) */
+  lyrics?: string;
   artist?: string;
   year?: number;
 }
@@ -58,6 +69,7 @@ export interface QuizType {
 /** 정답 텍스트 (보기 번호 → 보기 내용) */
 export function answerText(q: Question): string {
   if (q.input === 'choice') return `${q.answer + 1}번 · ${q.choices[q.answer]}`;
+  if (q.input === 'buzzer' && q.lyrics && q.artist) return `${q.artist} - ${q.answer}`;
   if (q.input === 'buzzer' && q.artist) return `${q.answer} — ${q.artist}`;
   return q.answer;
 }
@@ -129,4 +141,27 @@ export const song = (title: string, artist: string, year: number, youtubeId: str
   accept,
   media: youtubeId ? { youtubeId, startSec } : undefined,
   explanation: `${artist} · ${year}년`,
+});
+
+/** 줌인 퀴즈: 정답 + SVG 그림 + 처음 확대할 구역 */
+export const zoomQ = (answer: string, art: ZoomArt, explanation?: string, accept?: string[], hint?: string): Draft<BuzzerQ> => ({
+  input: 'buzzer',
+  prompt: '🔍 이 그림은 무엇일까요?',
+  answer,
+  explanation,
+  accept,
+  hint,
+  art,
+});
+
+/** 가사 TTS 퀴즈: 곡명 + 가수 + 읽어 줄 가사 */
+export const lyricQ = (title: string, artist: string, lyrics: string, accept?: string[], hint?: string): Draft<BuzzerQ> => ({
+  input: 'buzzer',
+  prompt: '🤖 기계음 가사를 듣고 노래를 맞혀보세요!',
+  answer: title,
+  artist,
+  lyrics,
+  accept,
+  hint,
+  explanation: `${artist} - ${title}`,
 });

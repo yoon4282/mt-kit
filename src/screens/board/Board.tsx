@@ -15,6 +15,7 @@ import { QuizControl } from '../../components/QuizControl';
 import { SecretSheet } from '../../components/SecretSheet';
 import { AwardToast } from '../../components/AwardToast';
 import { Stage } from './Stage';
+import { TtsSpeaker } from './TtsSpeaker';
 import { BoardTools } from './BoardTools';
 import { MusicPlayer } from './MusicPlayer';
 import { Podium } from './Podium';
@@ -270,8 +271,15 @@ export function Board() {
         )}
 
         <section className="stage-col">
-          <Stage view={publicView} />
+          <Stage view={publicView} art={current?.input === 'buzzer' ? current.art : undefined} />
           {/* 음악 플레이어는 문제 단계가 바뀌어도 다시 만들어지지 않도록 고정 위치에 둠 */}
+          {state.round.kind === 'tts' && state.round.questionId && (
+            <TtsSpeaker
+              lyrics={current?.input === 'buzzer' ? current.lyrics : undefined}
+              tts={state.round.tts ?? { seq: 0, rate: 1 }}
+              revealed={state.round.phase === 'revealed'}
+            />
+          )}
           {isMusicRound && (
             <MusicPlayer
               media={media}

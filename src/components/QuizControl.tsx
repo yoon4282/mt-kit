@@ -4,6 +4,7 @@ import { QUIZ_TYPES, findCategory } from '../data/quizzes';
 import type { QuizKind } from '../data/quiz';
 import type { McView } from '../types';
 import { TimerRing } from './TimerRing';
+import { ZOOM_SCALE } from './ZoomFrame';
 
 const TIMER_PRESETS = [5, 10, 15, 20, 30, 60];
 
@@ -160,6 +161,43 @@ export function QuizControl({ view, send }: { view: McView; send: (a: McAction) 
             <button type="button" className="btn ghost sm" onClick={() => send({ type: 'START' })}>
               ↻ 입력 다시 열기
             </button>
+          )}
+
+          {/* 줌인: 범위 넓히기 */}
+          {q?.isZoom && (
+            <div className="zoom-row">
+              <span className="muted small">
+                🔍 전광판 {ZOOM_SCALE[round.zoom] * 100}% · 권장 배점 +{[30, 20, 10][round.zoom - 1]}
+              </span>
+              <button type="button" className="btn sm go" disabled={round.zoom >= 3} onClick={() => send({ type: 'ZOOM_WIDEN' })}>
+                ↔ 범위 넓히기 ({round.zoom === 1 ? '400% → 200%' : round.zoom === 2 ? '200% → 100%' : '전체'})
+              </button>
+              <button type="button" className="btn sm" disabled={round.zoom >= 3} onClick={() => send({ type: 'ZOOM_SET', level: 3 })}>
+                🖼 전체 공개 (100%)
+              </button>
+              <button type="button" className="btn ghost sm" disabled={round.zoom <= 1} onClick={() => send({ type: 'ZOOM_SET', level: 1 })}>
+                ↺ 400%로
+              </button>
+            </div>
+          )}
+
+          {/* 가사 낭독 (TTS) */}
+          {q?.isTts && (
+            <div className="tts-row">
+              <button type="button" className="btn sm go" onClick={() => send({ type: 'TTS_PLAY', rate: 1 })}>
+                🤖 가사 낭독 재생
+              </button>
+              <button type="button" className="btn sm" disabled={!round.tts.seq} onClick={() => send({ type: 'TTS_PLAY' })}>
+                🔁 다시 듣기
+              </button>
+              <button type="button" className="btn sm" onClick={() => send({ type: 'TTS_PLAY', rate: 0.8 })}>
+                🐢 느리게 읽기 (0.8배속)
+              </button>
+              <button type="button" className="btn sm" onClick={() => send({ type: 'TTS_PLAY', rate: 1.3 })}>
+                🐇 빠르게 읽기 (1.3배속)
+              </button>
+              <span className="muted small">전광판 스피커로 읽어요{round.tts.seq ? ` · 현재 ${round.tts.rate}배속` : ''} · 낭독이 시작되면 버저가 열려요</span>
+            </div>
           )}
 
           {/* 음악 */}
