@@ -141,3 +141,15 @@ export const ART = {
   watermelon: { svg: watermelon, fx: 50, fy: 60 },
   ladybug: { svg: ladybug, fx: 40, fy: 46 },
 } satisfies Record<string, ZoomArt>;
+
+/** 사진 전용 문제(직접 그린 그림이 없는 문제)의 사진 로딩 실패 대체 그림 */
+export const PLACEHOLDER_ART: ZoomArt = {
+  svg: svg(
+    `<circle cx="50" cy="40" r="22" fill="#d9d4f2"/><text x="50" y="50" font-family="Arial, sans-serif" font-size="30" font-weight="900" fill="#6b5fb5" text-anchor="middle">?</text>
+     <text x="50" y="76" font-family="'Malgun Gothic','Apple SD Gothic Neo',sans-serif" font-size="7.5" font-weight="700" fill="#5b5780" text-anchor="middle">사진을 불러오지 못했어요</text>
+     <text x="50" y="87" font-family="'Malgun Gothic','Apple SD Gothic Neo',sans-serif" font-size="6" fill="#7b7aa0" text-anchor="middle">MC 정답지를 보고 진행하세요</text>`,
+    '#eeecf9',
+  ),
+  fx: 50,
+  fy: 50,
+};
