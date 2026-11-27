@@ -111,12 +111,13 @@ export function toChosung(text: string): string {
 }
 
 /** 초성 퀴즈: 정답만 적으면 초성 문제 자동 생성 */
-export const cho = (answer: string, explanation?: string, hint?: string): Draft<BuzzerQ> => ({
+export const cho = (answer: string, explanation?: string, hint?: string, accept?: string[]): Draft<BuzzerQ> => ({
   input: 'buzzer',
   prompt: toChosung(answer),
   answer,
   explanation,
   hint,
+  accept,
 });
 
 /** 일반 버저 문제 (이모지·스피드) */
@@ -129,19 +130,22 @@ export const buzz = (prompt: string, answer: string, explanation?: string, accep
   hint,
 });
 
-export const ox = (prompt: string, answer: 'O' | 'X', explanation?: string): Draft<OxQ> => ({
+/** hint: MC 비밀 정답지에만 보이는 한 줄 코멘트 */
+export const ox = (prompt: string, answer: 'O' | 'X', explanation?: string, hint?: string): Draft<OxQ> => ({
   input: 'ox',
   prompt,
   answer,
   explanation,
+  hint,
 });
 
-export const choice = (prompt: string, choices: [string, string, string, string], answer: 0 | 1 | 2 | 3, explanation?: string): Draft<ChoiceQ> => ({
+export const choice = (prompt: string, choices: [string, string, string, string], answer: 0 | 1 | 2 | 3, explanation?: string, hint?: string): Draft<ChoiceQ> => ({
   input: 'choice',
   prompt,
   choices,
   answer,
   explanation,
+  hint,
 });
 
 /** 음악 퀴즈: 제목·가수·연도 + 유튜브 공식 영상 ID·후렴 시작 초 */
