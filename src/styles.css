@@ -369,6 +369,7 @@ input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
 .cat-btn { border: 1px solid var(--line); background: var(--card2); border-radius: 10px; padding: 10px 8px; font-weight: 700; display: flex; justify-content: space-between; gap: 6px; }
 .cat-btn small { color: var(--muted); font-weight: 500; }
 .cat-btn.on { background: var(--accent); border-color: var(--accent); }
+.cat-btn.random { background: #7c3aed; border-color: #a78bfa; justify-content: center; grid-column: 1 / -1; }
 .cat-btn.on small { color: var(--text); }
 .toggle { display: inline-flex; align-items: center; gap: 4px; font-size: .85rem; font-weight: 500; margin-left: auto; }
 .toggle input { width: 16px; height: 16px; padding: 0; }

@@ -66,6 +66,15 @@ export function QuizControl({ view, send }: { view: McView; send: (a: McAction) 
           ))}
         </div>
         <div className="cat-row">
+          <button
+            type="button"
+            className="cat-btn random"
+            disabled={browseType.categories.every((c) => c.questions.every((x) => view.used.includes(x.id)))}
+            onClick={() => send({ type: 'RANDOM_QUESTION', kind: browseKind })}
+            title="이 종류에서 안 낸 문제를 무작위로 출제"
+          >
+            🎲 랜덤 출제
+          </button>
           {browseType.categories.map((c) => {
             const used = c.questions.filter((x) => view.used.includes(x.id)).length;
             const active = round.kind === browseKind && round.categoryId === c.id;
@@ -138,6 +147,15 @@ export function QuizControl({ view, send }: { view: McView; send: (a: McAction) 
               ▶
             </button>
           </div>
+          <button
+            type="button"
+            className="btn ghost sm"
+            disabled={allUsed}
+            onClick={() => send({ type: 'RANDOM_QUESTION' })}
+            title="이 카테고리에서 안 낸 문제를 무작위로 출제"
+          >
+            🎲 랜덤 출제 ({cat.questions.length - usedInCat}문제 남음)
+          </button>
           {q && round.phase === 'closed' && (
             <button type="button" className="btn ghost sm" onClick={() => send({ type: 'START' })}>
               ↻ 입력 다시 열기

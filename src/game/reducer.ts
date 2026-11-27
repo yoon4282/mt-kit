@@ -24,6 +24,8 @@ export type McAction =
   | { type: 'PICK_CATEGORY'; kind: QuizKind; categoryId: string }
   | { type: 'LOAD_QUESTION'; questionId: string }
   | { type: 'NEXT_QUESTION' }
+  /** 아직 안 낸 문제 중 무작위 출제. kind 만 주면 그 종류의 카테고리도 무작위, 생략하면 현재 카테고리 */
+  | { type: 'RANDOM_QUESTION'; kind?: QuizKind; categoryId?: string }
   | { type: 'PREV_QUESTION' }
   | { type: 'START' }
   | { type: 'CLOSE' }
@@ -54,7 +56,7 @@ export type GameAction = McAction | SystemAction;
 const MC_ACTION_TYPES = new Set<McAction['type']>([
   'SET_MODE', 'AWARD', 'UNDO', 'RENAME_TEAM', 'RESET_SCORES', 'REMOVE_PLAYER', 'SHOW_PODIUM',
   'BUZZER_OPEN', 'BUZZER_LOCK', 'BUZZER_RESET', 'BUZZ_WRONG',
-  'PICK_CATEGORY', 'LOAD_QUESTION', 'NEXT_QUESTION', 'PREV_QUESTION', 'START', 'CLOSE', 'REVEAL', 'END_ROUND',
+  'PICK_CATEGORY', 'LOAD_QUESTION', 'NEXT_QUESTION', 'RANDOM_QUESTION', 'PREV_QUESTION', 'START', 'CLOSE', 'REVEAL', 'END_ROUND',
   'SET_SHUFFLE', 'PLAY_CLIP', 'TIMER_SET', 'TIMER_RESUME', 'TIMER_PAUSE', 'TIMER_RESET',
 ]);
 
@@ -406,6 +408,29 @@ function reduce(state: GameState, action: GameAction): GameState {
         nextId = unused.find((id) => ids.indexOf(id) > cur) ?? unused[0];
       }
       return loadQuestion(state, nextId, true);
+    }
+
+    case 'RANDOM_QUESTION': {
+      let base = state;
+      const kind = action.kind ?? state.round.kind;
+      let catId = action.categoryId ?? (action.kind ? null : state.round.categoryId);
+      if (!kind) return state;
+      const type = findType(kind);
+      if (!type) return state;
+      const unusedIn = (id: string) =>
+        (findCategory(kind, id)?.questions ?? []).filter((q) => !state.round.used.includes(q.id));
+      if (!catId) {
+        // 종류만 지정: 안 낸 문제가 남은 카테고리 중 하나를 무작위로
+        const cats = type.categories.filter((c) => unusedIn(c.id).length > 0);
+        if (!cats.length) return state;
+        catId = cats[Math.floor(Math.random() * cats.length)].id;
+      }
+      const pool = unusedIn(catId);
+      if (!pool.length) return state; // 이 카테고리는 모두 출제함
+      if (state.round.kind !== kind || state.round.categoryId !== catId) {
+        base = reduce(state, { type: 'PICK_CATEGORY', kind, categoryId: catId });
+      }
+      return loadQuestion(base, pool[Math.floor(Math.random() * pool.length)].id, true);
     }
 
     case 'PREV_QUESTION': {
