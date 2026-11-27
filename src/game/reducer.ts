@@ -147,6 +147,8 @@ function applyScore(state: GameState, ev: ScoreEvent, sign: 1 | -1): GameState {
 
 /** 4지선다 스피드 채점: 가장 빠른 정답자 30점, 그 뒤로 1점씩 감소 (최소 1점) */
 export const SPEED_MAX_POINTS = 30;
+/** 가사 낭독: [문제 공개 + 시작] 후 자동 낭독까지 대기 시간 */
+export const TTS_AUTO_DELAY_MS = 1000;
 
 /**
  * 정답자를 (마지막으로 고른) 시각 순으로 정렬해 점수 계산.
@@ -458,7 +460,7 @@ function reduce(state: GameState, action: GameAction): GameState {
       if (!ref || state.round.phase === 'revealed') return state;
       const isBuzzer = ref.question.input === 'buzzer';
       const isMusic = !!(ref.question.input === 'buzzer' && ref.question.media);
-      // 가사 낭독 문제는 MC 가 [가사 낭독 재생]을 누르고 낭독이 끝나면 버저가 열림 (TTS_ENDED)
+      // 가사 낭독 문제는 낭독이 끝나면 버저가 열림 (TTS_ENDED)
       const isTts = !!(ref.question.input === 'buzzer' && ref.question.lyrics);
       const fresh = state.round.phase === 'ready';
       return {
@@ -469,6 +471,8 @@ function reduce(state: GameState, action: GameAction): GameState {
           startedAt: fresh || !state.round.startedAt ? Date.now() : state.round.startedAt,
           // 음악 문제는 시작과 동시에 1초 재생
           clip: isMusic && fresh ? { seq: state.round.clip.seq + 1, sec: 1 } : state.round.clip,
+          // 가사 낭독 문제는 [문제 공개 + 시작] 1초 뒤 자동 낭독
+          tts: isTts && fresh ? { seq: (state.round.tts?.seq ?? 0) + 1, rate: 1, delayMs: TTS_AUTO_DELAY_MS } : state.round.tts,
         },
         // 버저 문제: 바로 열림. 음악 문제는 노래가 끝나면(CLIP_ENDED) 열림
         buzzer: isBuzzer
@@ -545,7 +549,7 @@ function reduce(state: GameState, action: GameAction): GameState {
       const rate = Math.max(0.5, Math.min(2, action.rate ?? base.round.tts?.rate ?? 1));
       return {
         ...base,
-        round: { ...base.round, tts: { seq: (base.round.tts?.seq ?? 0) + 1, rate } },
+        round: { ...base.round, tts: { seq: (base.round.tts?.seq ?? 0) + 1, rate, delayMs: 0 } },
         // 1초 음악처럼 낭독이 끝날 때까지 버저를 닫아 둠 (이미 누른 순서는 유지) → TTS_ENDED 에서 열림
         buzzer: { ...base.buzzer, open: false },
       };
