@@ -38,6 +38,9 @@ h4 small, h3 small { color: var(--muted); font-weight: 400; margin-left: 6px; }
 @keyframes pulse { 50% { transform: scale(1.06); } }
 .alert { background: #4c1d1d; border: 1px solid var(--bad); border-radius: 10px; padding: 8px 12px; margin: 8px 0; }
 .alert button { margin: 0 8px; }
+.alert.warn { background: #4a3a10; border-color: var(--warn); }
+.qlist button.used { opacity: .5; }
+.err-box { padding: 24px; color: #fff; background: #4c1d1d; min-height: 100vh; word-break: break-all; }
 .board-main { display: grid; grid-template-columns: 1fr 360px; gap: 18px; margin-top: 12px; }
 @media (max-width: 900px) { .board-main { grid-template-columns: 1fr; } }
 .stage { background: var(--card); border-radius: 20px; padding: 22px; min-height: 480px; display: flex; flex-direction: column; justify-content: center; }

@@ -157,6 +157,12 @@ export default function Board() {
           {!audioOn && <button className="sound-on" onClick={enableAudio}>🔊 소리 켜기 (클릭!)</button>}
         </div>
       </header>
+      {['localhost', '127.0.0.1', '[::1]'].includes(window.location.hostname) && (
+        <div className="alert warn">
+          ⚠ 지금 <b>localhost</b> 로 열려 있어 QR 을 폰으로 스캔해도 접속되지 않습니다.
+          배포 주소(https://…github.io/mt-kit/)로 여세요. (개발 중이면 같은 와이파이의 <code>http://PC의_IP:5173</code>)
+        </div>
+      )}
       {net.error && net.error !== 'retrying' && (
         <div className="alert">
           네트워크 오류: {net.error === 'unavailable-id' ? '같은 방 코드가 다른 창에서 사용 중입니다.' : net.error}

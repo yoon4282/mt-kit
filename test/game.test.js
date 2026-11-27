@@ -88,6 +88,22 @@ test('스피드 퀴즈: O/X 카운트, 종료 후 일괄 배점은 한 번만', 
   assert.equal(s.speed.running, false);
 });
 
+test('랜덤 출제: 같은 카테고리에서 10번 연속 중복 없이, 다 쓰면 다시 섞는다', () => {
+  let s = base();
+  const seen = new Set();
+  for (let i = 0; i < 10; i++) {
+    s = run(s, { type: 'RANDOM_Q', category: 'buzz', r: Math.random() });
+    assert.equal(s.q.category, 'buzz');
+    assert.ok(!seen.has(s.q.qid));
+    seen.add(s.q.qid);
+  }
+  s = run(s, { type: 'RANDOM_Q', category: 'buzz', r: 0.5 });
+  assert.equal(s.q.category, 'buzz');
+  assert.equal(s.used.filter((id) => id.startsWith('buz')).length, 1);
+  s = run(s, { type: 'RESET_USED' });
+  assert.equal(s.used.length, 0);
+});
+
 test('참가자용 공개 상태에는 정답/문제 내용이 없다', () => {
   const s = run(base(), { type: 'SELECT_Q', qid: 'typ-01' });
   const json = JSON.stringify(playerView(s, 'a', 0));

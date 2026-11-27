@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react';
 import { CATEGORIES, QUIZ_BY_CATEGORY, getQuiz } from '../data/quizzes.js';
 import { PRESETS, rankPlayers, rankTeams } from '../core/game.js';
-import { SOUNDBOARD, playSfx, unlockAudio } from '../audio/sfx.js';
+import { SOUNDBOARD, unlockAudio } from '../audio/sfx.js';
 import { useNow, fmtSec, TEAM_COLORS } from '../core/util.js';
 import Scoreboard, { TeamBadge } from './Scoreboard.jsx';
 
@@ -226,10 +226,16 @@ export default function McConsole({ state, send, offset = 0, secretDefault = tru
             <button key={c.key} className={tab === c.key ? 'on' : ''} onClick={() => setTab(c.key)}>{c.icon} {c.label}</button>
           ))}
         </div>
+        <div className="btn-row">
+          <button className="big alt" onClick={() => send({ type: 'RANDOM_Q', category: tab, r: Math.random() })}>
+            🎲 랜덤 출제 <small>(남은 {list.filter((q) => !state.used.includes(q.id)).length}/{list.length})</small>
+          </button>
+          <button className="mini" onClick={() => send({ type: 'RESET_USED' })}>출제 기록 초기화</button>
+        </div>
         <div className="qlist">
           {list.map((q) => (
-            <button key={q.id} className={state.q?.qid === q.id ? 'on' : ''} onClick={() => send({ type: 'SELECT_Q', qid: q.id })}>
-              <span className="qno">{q.id.slice(-2)}</span> {label(q)}
+            <button key={q.id} className={`${state.q?.qid === q.id ? 'on' : ''} ${state.used.includes(q.id) ? 'used' : ''}`} onClick={() => send({ type: 'SELECT_Q', qid: q.id })}>
+              <span className="qno">{q.id.slice(-2)}</span> {label(q)}{state.used.includes(q.id) && ' ✓'}
             </button>
           ))}
         </div>

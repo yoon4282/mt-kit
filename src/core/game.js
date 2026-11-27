@@ -3,7 +3,7 @@
 //   - 개인전(solo): players[id].personalScore 에만 누적
 //   - 팀전(team)  : teams[teamId].teamScore 에만 누적
 //   → 두 점수는 서로 절대 영향을 주지 않는다.
-import { getQuiz } from '../data/quizzes.js';
+import { getQuiz, QUIZ_BY_CATEGORY } from '../data/quizzes.js';
 
 export const TEAM_IDS = [1, 2, 3, 4];
 export const PRESETS = [10, 20, 30, 50, -10];
@@ -29,6 +29,7 @@ export function makeInitialState() {
     players: {}, // id -> { id, name, team, personalScore, bot }
     teams,
     q: null, // { qid, category }
+    used: [], // 이미 출제한 문제 id (랜덤 출제 시 중복 방지)
     nonce: 0, // 문제 선택할 때마다 증가
     revealed: false, // 전광판에 정답 공개 여부
     hintShown: false,
@@ -90,6 +91,7 @@ export function reducer(s, a) {
         ...s,
         phase: 'question',
         q: { qid: quiz.id, category: c },
+        used: s.used.includes(quiz.id) ? s.used : [...s.used, quiz.id],
         nonce: s.nonce + 1,
         revealed: false,
         hintShown: false,
@@ -103,6 +105,21 @@ export function reducer(s, a) {
         notice: '',
       };
     }
+    case 'RANDOM_Q': {
+      const pool = QUIZ_BY_CATEGORY[a.category];
+      if (!pool) return s;
+      let used = s.used;
+      let unused = pool.filter((q) => !used.includes(q.id));
+      if (unused.length === 0) { // 다 썼으면 이 카테고리만 다시 섞기
+        used = used.filter((id) => !pool.some((q) => q.id === id));
+        unused = pool;
+      }
+      const r = typeof a.r === 'number' ? a.r : Math.random();
+      const pick = unused[Math.min(unused.length - 1, Math.floor(r * unused.length))];
+      return reducer({ ...s, used }, { type: 'SELECT_Q', qid: pick.id });
+    }
+    case 'RESET_USED':
+      return { ...s, used: [] };
     case 'BACK_LOBBY':
       return {
         ...s, phase: 'lobby', q: null, revealed: false, hintShown: false, inputOpen: false,
@@ -241,7 +258,7 @@ export function reducer(s, a) {
 
 // MC(원격) 가 보낼 수 있는 액션만 허용
 export const MC_ACTIONS = new Set([
-  'SET_MODE', 'SELECT_Q', 'BACK_LOBBY', 'SONG_PLAY', 'HINT_SHOW', 'REVEAL', 'BUZZ_TOGGLE', 'BUZZ_RESET',
+  'SET_MODE', 'SELECT_Q', 'RANDOM_Q', 'RESET_USED', 'BACK_LOBBY', 'SONG_PLAY', 'HINT_SHOW', 'REVEAL', 'BUZZ_TOGGLE', 'BUZZ_RESET',
   'BUZZ_RESULT', 'INPUT_TOGGLE', 'AWARD_ANSWER', 'AWARD', 'RESET_SCORES', 'TIMER_START', 'TIMER_STOP',
   'SPEED_START', 'SPEED_MARK', 'SPEED_END', 'SPEED_AWARD', 'FX', 'KICK',
 ]);
